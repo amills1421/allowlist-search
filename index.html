@@ -127,16 +127,14 @@
 
     <div id="loading" style="display: none;">Searching...</div>
 
-    <table id="resultsTable" style="display:none;">
-      <thead>
-        <tr>
-          <th>URL</th>
-          <th>Platform</th>
-          <th>Last Updated</th>
-        </tr>
-      </thead>
-      <tbody id="resultsBody"></tbody>
-    </table>
+  <table id="resultsTable" style="display:none;">
+  <thead>
+    <tr>
+      <th>URL</th>
+    </tr>
+  </thead>
+  <tbody id="resultsBody"></tbody>
+</table>
 
     <div id="noResults" class="no-results" style="display: none;">No URLs found for that course.</div>
   </div>
@@ -225,28 +223,20 @@ console.log("Loaded courses:", allCourses);
             lastUpdated.style.display = 'block';
           }
 
-          data.results.forEach(item => {
-            const row = document.createElement('tr');
+        data.results.forEach(item => {
+  const row = document.createElement('tr');
 
-            const urlCell = document.createElement('td');
-            const urlLink = document.createElement('a');
-            urlLink.href = item.url;
-            urlLink.target = "_blank";
-            urlLink.textContent = item.url;
-            urlCell.appendChild(urlLink);
+  const urlCell = document.createElement('td');
+  const urlLink = document.createElement('a');
+  urlLink.href = item.url;
+  urlLink.target = "_blank";
+  urlLink.textContent = item.url;
+  urlCell.appendChild(urlLink);
 
-            const platformCell = document.createElement('td');
-            platformCell.textContent = item.platform || '—';
+  row.appendChild(urlCell);
+  resultsBody.appendChild(row);
+});
 
-            const updatedCell = document.createElement('td');
-            updatedCell.textContent = item.updated || '—';
-
-            row.appendChild(urlCell);
-            row.appendChild(platformCell);
-            row.appendChild(updatedCell);
-
-            resultsBody.appendChild(row);
-          });
 
           resultsTable.style.display = 'table';
         }
