@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Course Allow List Lookup</title>
+  <title>Course Whitelist Lookup</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
   <style>
     body {
@@ -30,22 +30,36 @@
       margin-bottom: 1rem;
     }
 
-    form {
-      margin-bottom: 1rem;
-    }
-
     input[type="text"] {
       width: 100%;
       padding: 0.75rem;
       font-size: 1rem;
       margin: 0.5rem 0;
-      border: 2px solid #2f8d98; /* Light Teal */
+      border: 2px solid #2f8d98;
       border-radius: 6px;
+    }
+
+    .course-button {
+      display: block;
+      width: 100%;
+      margin: 0.25rem 0;
+      padding: 0.5rem;
+      background-color: #2f8d98;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      text-align: left;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .course-button:hover {
+      background-color: #115e6e;
     }
 
     button {
       padding: 0.6rem 1.5rem;
-      background-color: #115e6e; /* Dark Teal */
+      background-color: #115e6e;
       color: white;
       font-size: 1rem;
       border: none;
@@ -55,7 +69,11 @@
     }
 
     button:hover {
-      background-color: #093c44; /* Deep Teal */
+      background-color: #093c44;
+    }
+
+    #courseResults {
+      margin-top: 0.5rem;
     }
 
     table {
@@ -69,7 +87,7 @@
     }
 
     th {
-      background-color: #2f8d98; /* Light Teal */
+      background-color: #2f8d98;
       color: white;
       padding: 0.75rem;
     }
@@ -82,7 +100,7 @@
     #loading {
       text-align: center;
       font-style: italic;
-      color: #a84c2a; /* A11y Orange */
+      color: #a84c2a;
       margin-top: 1rem;
     }
 
@@ -98,13 +116,10 @@
 
   <h2>Course Whitelist Lookup</h2>
 
-  <form id="searchForm">
-    <label for="courseInput">Enter course title:</label>
-    <input type="text" id="courseInput" name="course" list="courseSuggestions" placeholder="e.g., Biology A" required />
-    <button type="submit">Search</button>
-  </form>
+  <label for="courseInput">Start typing a course title:</label>
+  <input type="text" id="courseInput" placeholder="e.g., Biology A" />
 
-  <datalist id="courseSuggestions"></datalist>
+  <div id="courseResults"></div>
 
   <div id="output">
     <h3 id="courseTitle" style="display: none;"></h3>
@@ -127,23 +142,19 @@
   </div>
 
   <script>
-    // Autocomplete course title suggestions
+    let allCourses = [];
+
     window.addEventListener('DOMContentLoaded', async () => {
       try {
         const res = await fetch('https://script.google.com/macros/s/AKfycbylbY3eQLeCbsv2VrxkwQqnhWhsnGAipoXFGq7qekuzbjzrWNAJq7wvC2czaYpU7cs_/exec?getCourses=true');
-        const courses = await res.json();
-        const datalist = document.getElementById('courseSuggestions');
-        courses.forEach(title => {
-          const option = document.createElement('option');
-          option.value = title;
-          datalist.appendChild(option);
-        });
+        allCourses = await res.json();
       } catch (err) {
-        console.error('Error fetching course suggestions:', err);
+        console.error('Error loading course titles:', err);
       }
     });
 
-    const form = document.getElementById('searchForm');
+    const courseInput = document.getElementById('courseInput');
+    const courseResults = document.getElementById('courseResults');
     const resultsTable = document.getElementById('resultsTable');
     const resultsBody = document.getElementById('resultsBody');
     const noResults = document.getElementById('noResults');
@@ -151,20 +162,33 @@
     const lastUpdated = document.getElementById('lastUpdated');
     const loadingIndicator = document.getElementById('loading');
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const course = document.getElementById('courseInput').value.trim();
+    courseInput.addEventListener('input', () => {
+      const query = courseInput.value.toLowerCase();
+      courseResults.innerHTML = '';
+
+      if (query.length < 2) return;
+
+      const matches = allCourses.filter(title => title.toLowerCase().includes(query));
+      matches.forEach(match => {
+        const button = document.createElement('button');
+        button.className = 'course-button';
+        button.textContent = match;
+        button.onclick = () => loadCourse(match);
+        courseResults.appendChild(button);
+      });
+    });
+
+    async function loadCourse(title) {
       resultsBody.innerHTML = '';
       resultsTable.style.display = 'none';
       noResults.style.display = 'none';
       courseTitleHeader.style.display = 'none';
       lastUpdated.style.display = 'none';
       loadingIndicator.style.display = 'block';
-
-      if (!course) return;
+      courseResults.innerHTML = '';
 
       try {
-        const response = await fetch(`https://script.google.com/macros/s/AKfycbylbY3eQLeCbsv2VrxkwQqnhWhsnGAipoXFGq7qekuzbjzrWNAJq7wvC2czaYpU7cs_/exec?course=${encodeURIComponent(course)}`);
+        const response = await fetch(`https://script.google.com/macros/s/AKfycbylbY3eQLeCbsv2VrxkwQqnhWhsnGAipoXFGq7qekuzbjzrWNAJq7wvC2czaYpU7cs_/exec?course=${encodeURIComponent(title)}`);
         const data = await response.json();
 
         loadingIndicator.style.display = 'none';
@@ -212,7 +236,7 @@
         noResults.textContent = 'There was an error fetching data.';
         noResults.style.display = 'block';
       }
-    });
+    }
   </script>
 
 </body>
