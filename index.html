@@ -147,7 +147,8 @@
     window.addEventListener('DOMContentLoaded', async () => {
       try {
         const res = await fetch('https://script.google.com/macros/s/AKfycbylbY3eQLeCbsv2VrxkwQqnhWhsnGAipoXFGq7qekuzbjzrWNAJq7wvC2czaYpU7cs_/exec?getCourses=true');
-        allCourses = await res.json();
+      allCourses = await res.json();
+console.log("Loaded courses:", allCourses);
       } catch (err) {
         console.error('Error loading course titles:', err);
       }
