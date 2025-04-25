@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Course Whitelist Lookup</title>
+  <title>Course Allow List Lookup</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
   <style>
     body {
@@ -50,8 +50,26 @@
     .course-button:hover {
       background-color: #115e6e;
     }
+    button {
+      padding: 0.6rem 1.5rem;
+      background-color: #115e6e;
+      color: white;
+      font-size: 1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #093c44;
+    }
     #courseResults {
       margin-top: 0.5rem;
+    }
+    #actionButtons {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
     }
     table {
       width: 100%;
@@ -87,11 +105,16 @@
 </head>
 <body>
 
-  <h2>Course Whitelist Lookup</h2>
+  <h2>Course Allow List Lookup</h2>
 
   <label for="courseInput">Start typing a course title:</label>
   <input type="text" id="courseInput" placeholder="e.g., Biology A" />
   <div id="courseResults"></div>
+
+  <div id="actionButtons">
+    <button id="clearButton">Clear</button>
+    <button id="copyButton">Copy URLs</button>
+  </div>
 
   <div id="output">
     <h3 id="courseTitle" style="display: none;"></h3>
@@ -144,6 +167,8 @@
       const courseTitleHeader = document.getElementById('courseTitle');
       const lastUpdated = document.getElementById('lastUpdated');
       const loadingIndicator = document.getElementById('loading');
+      const clearButton = document.getElementById('clearButton');
+      const copyButton = document.getElementById('copyButton');
 
       courseInput.addEventListener('input', () => {
         const query = courseInput.value.trim().toLowerCase();
@@ -217,6 +242,31 @@
           noResults.style.display = 'block';
         }
       }
+
+      clearButton.addEventListener('click', () => {
+        courseInput.value = '';
+        courseResults.innerHTML = '';
+        resultsBody.innerHTML = '';
+        resultsTable.style.display = 'none';
+        noResults.style.display = 'none';
+        courseTitleHeader.style.display = 'none';
+        lastUpdated.style.display = 'none';
+        loadingIndicator.style.display = 'none';
+        courseInput.focus();
+      });
+
+      copyButton.addEventListener('click', () => {
+        const urls = [...document.querySelectorAll('#resultsBody td a')].map(a => a.href);
+        if (urls.length === 0) {
+          alert("No URLs to copy yet.");
+          return;
+        }
+        navigator.clipboard.writeText(urls.join('\\n')).then(() => {
+          alert("URLs copied to clipboard!");
+        }).catch(() => {
+          alert("Failed to copy URLs.");
+        });
+      });
     }
 
     window.addEventListener('DOMContentLoaded', async () => {
