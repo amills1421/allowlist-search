@@ -1,7 +1,3 @@
-from pathlib import Path
-
-# Create the full index.html file with all updates integrated
-html_code = """
 <!DOCTYPE html>
 <html>
 <head>
@@ -165,10 +161,3 @@ html_code = """
 
 </body>
 </html>
-"""
-
-# Save to file so user can download it
-file_path = Path("/mnt/data/index.html")
-file_path.write_text(html_code)
-
-file_path.name
