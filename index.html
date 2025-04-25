@@ -143,6 +143,11 @@
     let allCourses = [];
 
     window.addEventListener('DOMContentLoaded', async () => {
+    const start = performance.now();
+const res = await fetch('https://script.google.com/macros/s/AKfycbylbY3eQLeCbsv2VrxkwQqnhWhsnGAipoXFGq7qekuzbjzrWNAJq7wvC2czaYpU7cs_/exec?getCourses=true');
+const duration = performance.now() - start;
+console.log("Fetched courses in", duration.toFixed(2), "ms");
+
       try {
         const res = await fetch('https://script.google.com/macros/s/AKfycbylbY3eQLeCbsv2VrxkwQqnhWhsnGAipoXFGq7qekuzbjzrWNAJq7wvC2czaYpU7cs_/exec?getCourses=true');
       allCourses = await res.json();
