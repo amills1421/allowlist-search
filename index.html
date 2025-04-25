@@ -163,21 +163,40 @@ console.log("Loaded courses:", allCourses);
     const lastUpdated = document.getElementById('lastUpdated');
     const loadingIndicator = document.getElementById('loading');
 
-    courseInput.addEventListener('input', () => {
-      const query = courseInput.value.toLowerCase();
-      courseResults.innerHTML = '';
+   courseInput.addEventListener('input', () => {
+  const query = courseInput.value.trim().toLowerCase();
+  courseResults.innerHTML = '';
 
-      if (query.length < 2) return;
+  if (query.length === 0) {
+    return; // Don't show anything if the input is empty
+  }
 
-      const matches = allCourses.filter(title => title.toLowerCase().includes(query));
-      matches.forEach(match => {
-        const button = document.createElement('button');
-        button.className = 'course-button';
-        button.textContent = match;
-        button.onclick = () => loadCourse(match);
-        courseResults.appendChild(button);
-      });
-    });
+  const matches = allCourses.filter(title =>
+    title.toLowerCase().includes(query)
+  );
+
+  if (matches.length === 0) {
+    const note = document.createElement('div');
+    note.textContent = 'No matching courses found.';
+    note.style.color = '#6d6e71';
+    note.style.marginTop = '0.5rem';
+    courseResults.appendChild(note);
+    return;
+  }
+
+  matches.forEach(match => {
+    const button = document.createElement('button');
+    button.className = 'course-button';
+    button.textContent = match;
+    button.onclick = () => {
+      courseInput.value = match;
+      loadCourse(match);
+      courseResults.innerHTML = ''; // hide list after selection
+    };
+    courseResults.appendChild(button);
+  });
+});
+
 
     async function loadCourse(title) {
       resultsBody.innerHTML = '';
