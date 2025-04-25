@@ -2,55 +2,95 @@
 <html>
 <head>
   <title>Course Whitelist Lookup</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Roboto', Arial, sans-serif;
       padding: 1rem;
-      max-width: 800px;
+      max-width: 900px;
       margin: auto;
+      background-color: #ffffff;
+      color: #091d20; /* Black Teal */
     }
-    h2, h3 {
+
+    h2 {
       text-align: center;
+      color: #093c44; /* Deep Teal */
     }
+
+    h3 {
+      text-align: center;
+      color: #115e6e; /* Dark Teal */
+      margin-bottom: 0.25rem;
+    }
+
+    #lastUpdated {
+      text-align: center;
+      color: #6d6e71; /* Light Gray */
+      margin-bottom: 1rem;
+    }
+
     form {
       margin-bottom: 1rem;
     }
+
     input[type="text"] {
       width: 100%;
-      padding: 0.5rem;
+      padding: 0.75rem;
       font-size: 1rem;
       margin: 0.5rem 0;
+      border: 2px solid #2f8d98; /* Light Teal */
+      border-radius: 6px;
     }
+
     button {
-      padding: 0.5rem 1rem;
-      background-color: #4285F4;
+      padding: 0.6rem 1.5rem;
+      background-color: #115e6e; /* Dark Teal */
       color: white;
       font-size: 1rem;
       border: none;
-      border-radius: 4px;
+      border-radius: 6px;
       cursor: pointer;
+      transition: background-color 0.3s ease;
     }
+
     button:hover {
-      background-color: #3367D6;
+      background-color: #093c44; /* Deep Teal */
     }
+
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 1rem;
+      background-color: white;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
-    th, td {
-      padding: 0.5rem;
-      border-bottom: 1px solid #ddd;
-      text-align: left;
-    }
+
     th {
-      background-color: #f4f4f4;
+      background-color: #2f8d98; /* Light Teal */
+      color: white;
+      padding: 0.75rem;
     }
+
+    td {
+      padding: 0.75rem;
+      border-bottom: 1px solid #eee;
+    }
+
+    #loading {
+      text-align: center;
+      font-style: italic;
+      color: #a84c2a; /* A11y Orange */
+      margin-top: 1rem;
+    }
+
     .no-results {
       color: #d9534f;
-      margin-top: 1rem;
       font-weight: bold;
       text-align: center;
+      margin-top: 1rem;
     }
   </style>
 </head>
@@ -68,10 +108,9 @@
 
   <div id="output">
     <h3 id="courseTitle" style="display: none;"></h3>
+    <div id="lastUpdated" style="display: none;"></div>
 
-    <div id="loading" style="display: none; text-align: center; font-style: italic; margin-top: 1rem;">
-      Searching...
-    </div>
+    <div id="loading" style="display: none;">Searching...</div>
 
     <table id="resultsTable" style="display:none;">
       <thead>
@@ -109,6 +148,7 @@
     const resultsBody = document.getElementById('resultsBody');
     const noResults = document.getElementById('noResults');
     const courseTitleHeader = document.getElementById('courseTitle');
+    const lastUpdated = document.getElementById('lastUpdated');
     const loadingIndicator = document.getElementById('loading');
 
     form.addEventListener('submit', async (e) => {
@@ -118,6 +158,7 @@
       resultsTable.style.display = 'none';
       noResults.style.display = 'none';
       courseTitleHeader.style.display = 'none';
+      lastUpdated.style.display = 'none';
       loadingIndicator.style.display = 'block';
 
       if (!course) return;
@@ -133,6 +174,12 @@
         } else {
           courseTitleHeader.textContent = `Course: ${data.courseTitle}`;
           courseTitleHeader.style.display = 'block';
+
+          const mostRecentDate = data.results[0]?.updated || "";
+          if (mostRecentDate) {
+            lastUpdated.textContent = `Allow List Last Updated: ${mostRecentDate}`;
+            lastUpdated.style.display = 'block';
+          }
 
           data.results.forEach(item => {
             const row = document.createElement('tr');
