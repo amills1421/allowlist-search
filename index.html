@@ -206,7 +206,9 @@
         loadingIndicator.style.display = 'block';
 
         try {
-          const response = await fetch(COURSE_API.replace("?getCourses=true", "") + "&course=" + encodeURIComponent(title));
+         const baseUrl = COURSE_API.split('?')[0];
+const response = await fetch(baseUrl + "?course=" + encodeURIComponent(title));
+
           const data = await response.json();
 
           loadingIndicator.style.display = 'none';
