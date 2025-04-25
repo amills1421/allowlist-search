@@ -1,3 +1,7 @@
+from pathlib import Path
+
+# Create the full index.html file with all updates integrated
+html_code = """
 <!DOCTYPE html>
 <html>
 <head>
@@ -9,7 +13,7 @@
       max-width: 800px;
       margin: auto;
     }
-    h2 {
+    h2, h3 {
       text-align: center;
     }
     form {
@@ -60,67 +64,111 @@
 
   <form id="searchForm">
     <label for="courseInput">Enter course title:</label>
-    <input type="text" id="courseInput" name="course" placeholder="e.g., Biology 101" required />
+    <input type="text" id="courseInput" name="course" list="courseSuggestions" placeholder="e.g., Biology A" required />
     <button type="submit">Search</button>
   </form>
 
- <div id="output">
-  <h3 id="courseTitle" style="display: none;"></h3>
+  <datalist id="courseSuggestions"></datalist>
 
-  <table id="resultsTable" style="display:none;">
-    <thead>
-      <tr>
-        <th>URL</th>
-        <th>Platform</th>
-        <th>Last Updated</th>
-      </tr>
-    </thead>
-    <tbody id="resultsBody"></tbody>
-  </table>
+  <div id="output">
+    <h3 id="courseTitle" style="display: none;"></h3>
 
-  <div id="noResults" class="no-results" style="display: none;">No URLs found for that course.</div>
-</div>
+    <table id="resultsTable" style="display:none;">
+      <thead>
+        <tr>
+          <th>URL</th>
+          <th>Platform</th>
+          <th>Last Updated</th>
+        </tr>
+      </thead>
+      <tbody id="resultsBody"></tbody>
+    </table>
+
+    <div id="noResults" class="no-results" style="display: none;">No URLs found for that course.</div>
+  </div>
 
   <script>
-const response = await fetch(`https://script.google.com/macros/s/AKfycbylbY3eQLeCbsv2VrxkwQqnhWhsnGAipoXFGq7qekuzbjzrWNAJq7wvC2czaYpU7cs_/exec?course=${encodeURIComponent(course)}`);
-const data = await response.json();
+    // Autocomplete course title suggestions
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const res = await fetch('https://script.google.com/macros/s/AKfycbylbY3eQLeCbsv2VrxkwQqnhWhsnGAipoXFGq7qekuzbjzrWNAJq7wvC2czaYpU7cs_/exec?getCourses=true');
+        const courses = await res.json();
+        const datalist = document.getElementById('courseSuggestions');
+        courses.forEach(title => {
+          const option = document.createElement('option');
+          option.value = title;
+          datalist.appendChild(option);
+        });
+      } catch (err) {
+        console.error('Error fetching course suggestions:', err);
+      }
+    });
 
-const courseTitleHeader = document.getElementById('courseTitle');
+    const form = document.getElementById('searchForm');
+    const resultsTable = document.getElementById('resultsTable');
+    const resultsBody = document.getElementById('resultsBody');
+    const noResults = document.getElementById('noResults');
+    const courseTitleHeader = document.getElementById('courseTitle');
 
-if (!Array.isArray(data.results) || data.results.length === 0) {
-  courseTitleHeader.style.display = 'none';
-  noResults.style.display = 'block';
-} else {
-  courseTitleHeader.textContent = `Course: ${data.courseTitle}`;
-  courseTitleHeader.style.display = 'block';
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const course = document.getElementById('courseInput').value.trim();
+      resultsBody.innerHTML = '';
+      resultsTable.style.display = 'none';
+      noResults.style.display = 'none';
+      courseTitleHeader.style.display = 'none';
 
-  data.results.forEach(item => {
-    const row = document.createElement('tr');
+      if (!course) return;
 
-    const urlCell = document.createElement('td');
-    const urlLink = document.createElement('a');
-    urlLink.href = item.url;
-    urlLink.target = "_blank";
-    urlLink.textContent = item.url;
-    urlCell.appendChild(urlLink);
+      try {
+        const response = await fetch(`https://script.google.com/macros/s/AKfycbylbY3eQLeCbsv2VrxkwQqnhWhsnGAipoXFGq7qekuzbjzrWNAJq7wvC2czaYpU7cs_/exec?course=${encodeURIComponent(course)}`);
+        const data = await response.json();
 
-    const platformCell = document.createElement('td');
-    platformCell.textContent = item.platform || '—';
+        if (!Array.isArray(data.results) || data.results.length === 0) {
+          noResults.style.display = 'block';
+        } else {
+          courseTitleHeader.textContent = `Course: ${data.courseTitle}`;
+          courseTitleHeader.style.display = 'block';
 
-    const updatedCell = document.createElement('td');
-    updatedCell.textContent = item.updated || '—';
+          data.results.forEach(item => {
+            const row = document.createElement('tr');
 
-    row.appendChild(urlCell);
-    row.appendChild(platformCell);
-    row.appendChild(updatedCell);
+            const urlCell = document.createElement('td');
+            const urlLink = document.createElement('a');
+            urlLink.href = item.url;
+            urlLink.target = "_blank";
+            urlLink.textContent = item.url;
+            urlCell.appendChild(urlLink);
 
-    resultsBody.appendChild(row);
-  });
+            const platformCell = document.createElement('td');
+            platformCell.textContent = item.platform || '—';
 
-  resultsTable.style.display = 'table';
-}
+            const updatedCell = document.createElement('td');
+            updatedCell.textContent = item.updated || '—';
 
+            row.appendChild(urlCell);
+            row.appendChild(platformCell);
+            row.appendChild(updatedCell);
+
+            resultsBody.appendChild(row);
+          });
+
+          resultsTable.style.display = 'table';
+        }
+      } catch (error) {
+        console.error('Fetch error:', error);
+        noResults.textContent = 'There was an error fetching data.';
+        noResults.style.display = 'block';
+      }
+    });
   </script>
 
 </body>
 </html>
+"""
+
+# Save to file so user can download it
+file_path = Path("/mnt/data/index.html")
+file_path.write_text(html_code)
+
+file_path.name
