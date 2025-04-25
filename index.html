@@ -10,26 +10,22 @@
       max-width: 900px;
       margin: auto;
       background-color: #ffffff;
-      color: #091d20; /* Black Teal */
+      color: #091d20;
     }
-
     h2 {
       text-align: center;
-      color: #093c44; /* Deep Teal */
+      color: #093c44;
     }
-
     h3 {
       text-align: center;
-      color: #115e6e; /* Dark Teal */
+      color: #115e6e;
       margin-bottom: 0.25rem;
     }
-
     #lastUpdated {
       text-align: center;
-      color: #6d6e71; /* Light Gray */
+      color: #6d6e71;
       margin-bottom: 1rem;
     }
-
     input[type="text"] {
       width: 100%;
       padding: 0.75rem;
@@ -38,7 +34,6 @@
       border: 2px solid #2f8d98;
       border-radius: 6px;
     }
-
     .course-button {
       display: block;
       width: 100%;
@@ -52,30 +47,12 @@
       cursor: pointer;
       font-size: 1rem;
     }
-
     .course-button:hover {
       background-color: #115e6e;
     }
-
-    button {
-      padding: 0.6rem 1.5rem;
-      background-color: #115e6e;
-      color: white;
-      font-size: 1rem;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-
-    button:hover {
-      background-color: #093c44;
-    }
-
     #courseResults {
       margin-top: 0.5rem;
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
@@ -85,25 +62,21 @@
       overflow: hidden;
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
-
     th {
       background-color: #2f8d98;
       color: white;
       padding: 0.75rem;
     }
-
     td {
       padding: 0.75rem;
       border-bottom: 1px solid #eee;
     }
-
     #loading {
       text-align: center;
       font-style: italic;
       color: #a84c2a;
       margin-top: 1rem;
     }
-
     .no-results {
       color: #d9534f;
       font-weight: bold;
@@ -118,140 +91,138 @@
 
   <label for="courseInput">Start typing a course title:</label>
   <input type="text" id="courseInput" placeholder="e.g., Biology A" />
-
   <div id="courseResults"></div>
 
   <div id="output">
     <h3 id="courseTitle" style="display: none;"></h3>
     <div id="lastUpdated" style="display: none;"></div>
-
     <div id="loading" style="display: none;">Searching...</div>
 
-  <table id="resultsTable" style="display:none;">
-  <thead>
-    <tr>
-      <th>URL</th>
-    </tr>
-  </thead>
-  <tbody id="resultsBody"></tbody>
-</table>
+    <table id="resultsTable" style="display:none;">
+      <thead>
+        <tr><th>URL</th></tr>
+      </thead>
+      <tbody id="resultsBody"></tbody>
+    </table>
 
     <div id="noResults" class="no-results" style="display: none;">No URLs found for that course.</div>
   </div>
 
   <script>
+    const STORAGE_KEY = "allowlist_courses";
+    const EXPIRATION_KEY = "allowlist_courses_expires";
+    const COURSE_API = "https://script.google.com/macros/s/AKfycbylbY3eQLeCbsv2VrxkwQqnhWhsnGAipoXFGq7qekuzbjzrWNAJq7wvC2czaYpU7cs_/exec?getCourses=true";
+
     let allCourses = [];
 
-    window.addEventListener('DOMContentLoaded', async () => {
-    const start = performance.now();
-const res = await fetch('https://script.google.com/macros/s/AKfycbylbY3eQLeCbsv2VrxkwQqnhWhsnGAipoXFGq7qekuzbjzrWNAJq7wvC2czaYpU7cs_/exec?getCourses=true');
-const duration = performance.now() - start;
-console.log("Fetched courses in", duration.toFixed(2), "ms");
+    async function fetchCourseTitles() {
+      const now = Date.now();
+      const expires = localStorage.getItem(EXPIRATION_KEY);
+      const cached = localStorage.getItem(STORAGE_KEY);
 
-      try {
-        const res = await fetch('https://script.google.com/macros/s/AKfycbylbY3eQLeCbsv2VrxkwQqnhWhsnGAipoXFGq7qekuzbjzrWNAJq7wvC2czaYpU7cs_/exec?getCourses=true');
-      allCourses = await res.json();
-console.log("Loaded courses:", allCourses);
-      } catch (err) {
-        console.error('Error loading course titles:', err);
+      if (cached && expires && parseInt(expires) > now) {
+        allCourses = JSON.parse(cached);
+        return;
       }
-    });
-
-    const courseInput = document.getElementById('courseInput');
-    const courseResults = document.getElementById('courseResults');
-    const resultsTable = document.getElementById('resultsTable');
-    const resultsBody = document.getElementById('resultsBody');
-    const noResults = document.getElementById('noResults');
-    const courseTitleHeader = document.getElementById('courseTitle');
-    const lastUpdated = document.getElementById('lastUpdated');
-    const loadingIndicator = document.getElementById('loading');
-
-   courseInput.addEventListener('input', () => {
-  const query = courseInput.value.trim().toLowerCase();
-  courseResults.innerHTML = '';
-
-  if (query.length === 0) {
-    return; // Don't show anything if the input is empty
-  }
-
-  const matches = allCourses.filter(title =>
-    title.toLowerCase().includes(query)
-  );
-
-  if (matches.length === 0) {
-    const note = document.createElement('div');
-    note.textContent = 'No matching courses found.';
-    note.style.color = '#6d6e71';
-    note.style.marginTop = '0.5rem';
-    courseResults.appendChild(note);
-    return;
-  }
-
-  matches.forEach(match => {
-    const button = document.createElement('button');
-    button.className = 'course-button';
-    button.textContent = match;
-    button.onclick = () => {
-      courseInput.value = match;
-      loadCourse(match);
-      courseResults.innerHTML = ''; // hide list after selection
-    };
-    courseResults.appendChild(button);
-  });
-});
-
-
-    async function loadCourse(title) {
-      resultsBody.innerHTML = '';
-      resultsTable.style.display = 'none';
-      noResults.style.display = 'none';
-      courseTitleHeader.style.display = 'none';
-      lastUpdated.style.display = 'none';
-      loadingIndicator.style.display = 'block';
-      courseResults.innerHTML = '';
 
       try {
-        const response = await fetch(`https://script.google.com/macros/s/AKfycbylbY3eQLeCbsv2VrxkwQqnhWhsnGAipoXFGq7qekuzbjzrWNAJq7wvC2czaYpU7cs_/exec?course=${encodeURIComponent(title)}`);
-        const data = await response.json();
-
-        loadingIndicator.style.display = 'none';
-
-        if (!Array.isArray(data.results) || data.results.length === 0) {
-          noResults.style.display = 'block';
-        } else {
-          courseTitleHeader.textContent = `Course: ${data.courseTitle}`;
-          courseTitleHeader.style.display = 'block';
-
-          const mostRecentDate = data.results[0]?.updated || "";
-          if (mostRecentDate) {
-            lastUpdated.textContent = `Allow List Last Updated: ${mostRecentDate}`;
-            lastUpdated.style.display = 'block';
-          }
-
-        data.results.forEach(item => {
-  const row = document.createElement('tr');
-
-  const urlCell = document.createElement('td');
-  const urlLink = document.createElement('a');
-  urlLink.href = item.url;
-  urlLink.target = "_blank";
-  urlLink.textContent = item.url;
-  urlCell.appendChild(urlLink);
-
-  row.appendChild(urlCell);
-  resultsBody.appendChild(row);
-});
-
-
-          resultsTable.style.display = 'table';
-        }
-      } catch (error) {
-        console.error('Fetch error:', error);
-        loadingIndicator.style.display = 'none';
-        noResults.textContent = 'There was an error fetching data.';
-        noResults.style.display = 'block';
+        const res = await fetch(COURSE_API);
+        allCourses = await res.json();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(allCourses));
+        localStorage.setItem(EXPIRATION_KEY, (now + 86400000).toString());
+      } catch (err) {
+        console.error("Failed to fetch course titles:", err);
       }
     }
+
+    function setupSearch() {
+      const courseInput = document.getElementById('courseInput');
+      const courseResults = document.getElementById('courseResults');
+      const resultsTable = document.getElementById('resultsTable');
+      const resultsBody = document.getElementById('resultsBody');
+      const noResults = document.getElementById('noResults');
+      const courseTitleHeader = document.getElementById('courseTitle');
+      const lastUpdated = document.getElementById('lastUpdated');
+      const loadingIndicator = document.getElementById('loading');
+
+      courseInput.addEventListener('input', () => {
+        const query = courseInput.value.trim().toLowerCase();
+        courseResults.innerHTML = '';
+        if (query.length === 0) return;
+
+        const matches = allCourses.filter(title => title.toLowerCase().includes(query));
+        if (matches.length === 0) {
+          const note = document.createElement('div');
+          note.textContent = 'No matching courses found.';
+          note.style.color = '#6d6e71';
+          courseResults.appendChild(note);
+          return;
+        }
+
+        matches.forEach(match => {
+          const button = document.createElement('button');
+          button.className = 'course-button';
+          button.textContent = match;
+          button.onclick = () => {
+            courseInput.value = match;
+            loadCourse(match);
+            courseResults.innerHTML = '';
+          };
+          courseResults.appendChild(button);
+        });
+      });
+
+      async function loadCourse(title) {
+        resultsBody.innerHTML = '';
+        resultsTable.style.display = 'none';
+        noResults.style.display = 'none';
+        courseTitleHeader.style.display = 'none';
+        lastUpdated.style.display = 'none';
+        loadingIndicator.style.display = 'block';
+
+        try {
+          const response = await fetch(COURSE_API.replace("?getCourses=true", "") + "&course=" + encodeURIComponent(title));
+          const data = await response.json();
+
+          loadingIndicator.style.display = 'none';
+
+          if (!Array.isArray(data.results) || data.results.length === 0) {
+            noResults.style.display = 'block';
+          } else {
+            courseTitleHeader.textContent = `Course: ${data.courseTitle}`;
+            courseTitleHeader.style.display = 'block';
+            if (data.results[0]?.updated) {
+              lastUpdated.textContent = `Allow List Last Updated: ${data.results[0].updated}`;
+              lastUpdated.style.display = 'block';
+            }
+
+            data.results.forEach(item => {
+              const row = document.createElement('tr');
+              const urlCell = document.createElement('td');
+              const urlLink = document.createElement('a');
+              urlLink.href = item.url;
+              urlLink.target = "_blank";
+              urlLink.textContent = item.url;
+              urlCell.appendChild(urlLink);
+              row.appendChild(urlCell);
+              resultsBody.appendChild(row);
+            });
+
+            resultsTable.style.display = 'table';
+          }
+        } catch (error) {
+          console.error("Fetch error:", error);
+          loadingIndicator.style.display = 'none';
+          noResults.textContent = 'There was an error fetching data.';
+          noResults.style.display = 'block';
+        }
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      await fetchCourseTitles();
+      setupSearch();
+    });
   </script>
 
 </body>
