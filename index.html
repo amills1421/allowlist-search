@@ -215,10 +215,15 @@
             latestResults = data.results;
             courseTitleHeader.textContent = `Course: ${data.courseTitle}`;
             courseTitleHeader.style.display = 'block';
-            if (data.results[0]?.updated) {
-              lastUpdated.textContent = `Allow List Last Updated: ${data.results[0].updated}`;
-              lastUpdated.style.display = 'block';
-            }
+          if (data.results[0]?.updated) {
+  const rawDate = new Date(data.results[0].updated);
+  const formattedDate = (rawDate.getMonth() + 1).toString().padStart(2, '0') + "/" +
+                         rawDate.getDate().toString().padStart(2, '0') + "/" +
+                         rawDate.getFullYear();
+  lastUpdated.textContent = `Allow List Last Updated: ${formattedDate}`;
+  lastUpdated.style.display = 'block';
+}
+
 
             data.results.forEach(item => {
               const row = document.createElement('tr');
